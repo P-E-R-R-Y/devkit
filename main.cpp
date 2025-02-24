@@ -100,8 +100,8 @@
              keyboard = createKeyboard(event);
              mouse = createMouse(event);
              text = createText("text", "./assets/font/noto.ttf");
-             music = createMusic("./assets/music/redSunInTheSky.mp3");
-             sound = createSound("./assets/sound/frankySuper.wav");
+             music = createMusic("./assets/audio/redSunInTheSky.mp3");
+             sound = createSound("./assets/audio/frankySuper.wav");
              music->play();
              window->setFrameLimit(120);
          }
