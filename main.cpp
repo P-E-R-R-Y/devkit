@@ -1,238 +1,71 @@
 /**
- * @file main.cpp
- * @author @Perry-Chouteau (perry.chouteau@outlook.com)
- * @brief 
- * @version 0.1
- * @date 2025-01-29
- * 
- * @addtogroup user
- * @{
+ * @ Author: Perry Chouteau
+ * @ Create Time: 2025-02-20 16:15:07
+ * @ Description: devkit, la ligne de commande.
+ *
+ *   devkit init physics -k static shared -b "Corps rigides"
+ *   devkit init hunter  -k shared app          (un iapp : module et binaire)
+ *   devkit set system -v v1.0.0
+ *   devkit set sfml_impl -v v0.2.0 --shared
+ *   devkit get
+ *   devkit del system
+ *   devkit build
  */
 
- #include <iostream>
- #include <ostream>
- #include <memory>
- #include <vector>
- #include <string>
- #include <map>
+#include "Cli.hpp"
+#include "cmd.hpp"
 
- #include "std.hpp"
+static const cli::Command devkit{
+    .name = "devkit",
+    .help = "cree et construit des projets P-E-R-R-Y",
+    .commands = {
+        {.name = "init", .help = "ecrit config.yaml, et rien d'autre",
+         .options = {
+             {.name = "kind", .alias = "k", .help = "ce que le depot produit, cumulable",
+              .arity = cli::Arity::Many, .choices = {"static", "shared", "app"}, .fallback = "static"},
+             {.name = "brief", .alias = "b", .help = "une ligne de description", .fallback = "TODO"},
+             {.name = "version", .alias = "v", .help = "version du projet", .fallback = "v0.1.0"},
+             {.name = "cmake", .help = "version minimale de CMake", .fallback = "3.24"},
+             {.name = "force", .alias = "f", .help = "ecrase un config.yaml existant", .arity = cli::Arity::Flag},
+             {.name = "example", .help = "ajoute un exemple", .arity = cli::Arity::Flag},
+             {.name = "no-tests", .help = "sans tests", .arity = cli::Arity::Flag},
+             {.name = "no-docs", .help = "sans documentation", .arity = cli::Arity::Flag},
+             {.name = "no-cicd", .help = "sans integration continue", .arity = cli::Arity::Flag},
+         },
+         .arguments = {.name = "nom", .min = 1, .max = 1},
+         .run = init},
 
- //ecs
- #include "Ecs.hpp"
- #include "includes/Components.hpp"
- #include "includes/Systems.hpp"
+        {.name = "set", .help = "ajoute une dependance, ou modifie la sienne",
+         .options = {
+             {.name = "version", .alias = "v", .help = "tag git, par exemple v1.0.0"},
+             {.name = "shared", .alias = "s", .help = "copiee a cote du binaire au lieu d'etre liee",
+              .arity = cli::Arity::Flag},
+         },
+         .arguments = {.name = "depot", .min = 1, .max = 1},
+         .run = set},
 
- #include "CustomisableEngine.hpp"
+        {.name = "del", .help = "retire une dependance",
+         .arguments = {.name = "depot", .min = 1, .max = 1},
+         .run = del},
 
- //finder
- #include "FileSearcher.hpp"
- 
- //interface 
- #include "InfoSharedLoader.hpp"
- #include "GraphicSharedLoader.hpp"
-// #include "SerialSharedLoader.hpp"
- 
- //ecs
- 
- /**
-  * @brief Create a Game from CustomisableEngine<GraphicSharedLoader, Registry>
-  * - the graphic symbols from the shared library
-  * - get the registry methods and 
-  * 
-  * @tparam GraphicSharedLoader
-  * @tparam Registry
-  */
- class Game: public CustomisableEngine<graphic::GraphicSharedLoader, ecs::Registry> {
-     public:
-         //todo change vector to variadic template
-         /**
-          * @brief Construct a new Game object
-          * 
-          * @param graphic 
-          */
-         Game(std::string graphic): CustomisableEngine(graphic, nullptr) {};
-         ~Game() = default;
- 
-         /**
-          * @brief start the game
-          * 
-          * @return int 
-          */
-         int start() override {
-             // main loop
-             this->initHandler();
-             while (window->isOpen()) {
-                 while (window->pollEvent()) {
-                     window->eventClose();
-                     this->eventHandler();
-                 }
-                 this->updateHandler();
-                 window->beginDraw();
-                 this->displayHandler();
-                 window->endDraw();
-             }
-             window->endAudio();
-             window->close();
- 
-             this->destroyHandler();
-             return 0;
-         }
- 
-     protected:
- 
-         /**
-          * @brief init the game using inherited methods
-          */
-         void initHandler() override {
-             std::cout << "initHandler " << std::endl;
-             window = createWindow(800, 500, "Perry");
-             window->beginAudio();
-             event = createEvent();
-             window->linkEvent(event);
-             std::vector<__v2f_t> star_points = {{125, 200}, {175, 200}, {200, 150}, {225, 200}, {275, 200},  {250, 250}, {255, 305}, {200, 285}, {145, 305}, {150, 250}};
-             std::vector<__v2f_t> heart_points = {{500, 100}, {600, 100}, {600, 200}, {700, 200}, {700, 300},  {500, 300}};
-             poly_star = createPolygon(star_points);
-             poly_heart = createPolygon(heart_points);
-             sprite = createSprite("./assets/image/image.png");
-             camera = createCamera();
-             model = createModel();
-             keyboard = createKeyboard(event);
-             mouse = createMouse(event);
-             text = createText("text", "./assets/font/noto.ttf");
-             music = createMusic("./assets/audio/redSunInTheSky.mp3");
-             sound = createSound("./assets/audio/frankySuper.wav");
-             music->play();
-             window->setFrameLimit(120);
-         }
- 
-         /**
-          * @brief handle event the game using inherited methods
-          */
-         void eventHandler() override {
-             if (keyboard != nullptr) {
-                 if (keyboard->isKeyDown(graphic::IKeyboard::Keys::KEY_SPACE)) {
-                     std::cout << "Jump" << std::endl;
-                     __v2f_t pos = sprite->getPosition();
-                     sprite->setPosition({pos.x + 1, pos.y});
-                     sprite->setRotation(sprite->getRotation() + 1);
-                 }
-                 if (keyboard->isKeyDown(graphic::IKeyboard::Keys::KEY_S)) {
-                     sound->play();
-                 }
-                 if (keyboard->isKeyDown(graphic::IKeyboard::Keys::KEY_P)) {
-                     music->pause();
-                 }
-             } else {
-                 std::cout << "isNULL" << std::endl;
-             }
-             //std::cout << "eventHandler " << std::endl;
-         }
- 
-         /**
-          * @brief update event the game using inherited methods
-          */
-         void updateHandler() override {
-             std::cout << window->getDelta() << std::endl;
-             //std::cout << "updateHandler " << std::endl;
-             music->update();
-         }
- 
-         /**
-          * @brief render the game using inherited methods
-          */
-         void displayHandler() override {
-             std::cout << "displayHandler" << std::endl;
-             //2D
-             window->drawSprite(sprite);
-             window->drawPoly(poly_star);
-             window->drawPoly(poly_heart);
-             window->drawText(text);
-             //3D
-             window->beginMode3(camera);
-             window->drawModel(model);
-             window->endMode3();
-         }
- 
-         /**
-          * @brief free game's data using inherited methods
-          */
-         void destroyHandler() override {
-             deleteWindow(window);
-             deleteEvent(event);
-             deletePolygon(poly_star);
-             deletePolygon(poly_heart);
-             deleteSprite(sprite);
-             deleteCamera(camera);
-             deleteModel(model);
-             deleteKeyboard(keyboard);
-             deleteMouse(mouse);
-             deleteText(text);
-             deleteMusic(music);
-             deleteSound(sound);
-         }
- 
-     public:
-         graphic::IWindow *window;
-         graphic::IEvent *event;
-         graphic::IPolygon *poly_star;
-         graphic::IPolygon *poly_heart;
-         graphic::ISprite *sprite;
-         graphic::ICamera *camera;
-         graphic::IModel *model;
-         graphic::IText *text;
-         //sound
-         graphic::ISound *sound;
-         graphic::IMusic *music;
- 
-         //event
-         graphic::IKeyboard *keyboard;
-         graphic::IMouse *mouse;
- 
- };
- 
- /**
-  * @brief sort shared library
-  * 
-  * @param files 
-  * @return std::map<std::string, std::vector<std::string>> 
-  */
- std::map<std::string, std::vector<std::string>> sortSharedLibrary(std::vector<std::string> files) {
-     std::map<std::string, std::vector<std::string>> map;
-     for (auto& file: files) {
-         std::cout << file << std::endl;
-         InfoSharedLoader info_shared(file);
-         if (!info_shared.getType()) {
-             continue;
-         }
-         std::cout << info_shared.getType() << std::endl;
-         map[info_shared.getType()].push_back(file);
-     }
-     return map;
- }
- 
- int main() {
-     std::cout << std::tab << "D" << std::endl;
-     //print pwd using system.
-     //system("ls");
-     //system("tree");
-     std::vector<std::string> files = FileSearcher::searchSharedLibraries("./assets/shared");
-     std::cout << "Shared Libraries:" << std::endl;
-     std::map<std::string, std::vector<std::string>> map = sortSharedLibrary(files);
-     std::cout << "C" << std::endl;
-     for (auto& [key, value]: map) {
-         std::cout << key << std::endl;
-         for (auto& file: value) {
-             std::cout << "\t" << file << std::endl;
-         }
-     }
-     std::cout << "B" << std::endl;
-     std::cout << map["graphic"].size() << std::endl;
-     for (auto& file: map["graphic"]) {
-         Game game(file);
-         game.start();
-     }
- 
-     std::cout << "A" << std::endl;
-     return 0;
- }
+        {.name = "get", .help = "affiche la configuration, ou une dependance",
+         .arguments = {.name = "depot", .max = 1},
+         .run = get},
+
+        {.name = "list", .help = "les depots publics de P-E-R-R-Y",
+         .options = {{.name = "url", .help = "affiche les adresses completes", .arity = cli::Arity::Flag}},
+         .run = list},
+
+        {.name = "build", .help = "genere le projet depuis config.yaml",
+         .options = {
+             {.name = "force", .alias = "f", .help = "reecrit les fichiers existants", .arity = cli::Arity::Flag},
+         },
+         .run = build},
+
+        {.name = "clean", .help = "efface le dossier de build", .run = clean},
+    },
+};
+
+int main(int argc, char **argv) {
+    return cli::execute(devkit, argc, argv);
+}
