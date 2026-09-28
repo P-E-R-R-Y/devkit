@@ -3,6 +3,26 @@
 Markers: 🟢 added · 🔴 breaking · 🔵 fix · ⚪ internal or docs · 🟡 proposed
 in the plan, no code written yet.
 
+## v0.3.0
+
+- 🔴 `-k` is now required: `devkit init` no longer picks static in silence
+- 🟢 every command reports a drift between `config.yaml` and a
+  `cmake/Find<Dep>.cmake` retouched by hand, and names the one the build
+  actually uses; `sync --force` realigns the module
+- 🟢 `tests/matrix.sh`: the ten combinations of kind, generated, configured,
+  built and tested, dependencies fetched into one shared cache
+- 🔵 an `app`-only repository had its tests linking no library at all, so
+  they reached no symbol; the tests now take the objects and `DEVKIT_LINK`
+- 🔵 `init --force` no longer rewrites the generated files: it bears on
+  `config.yaml` alone, and a CMakeLists carrying custom blocks survives
+- 🟢 the sources are globbed: dropping a `.cpp` into `sources/` is enough,
+  `symbole.cpp` and `main.cpp` excepted
+- 🟢 a `docs/Readme.md` template in the format of ecs and i18n, with the
+  blocks left empty
+- ⚪ the section titles moved inside the generated blocks: an empty block no
+  longer leaves an orphan heading
+- ⚪ devkit runs its own generated CI workflows
+
 ## v0.2.0
 
 - 🔴 devkit speaks English: every message, every help text, every comment,
@@ -45,3 +65,16 @@ in the plan, no code written yet.
 - ⚪ devkit follows its own format: object stage, five `devkit:` blocks, and
   `examples/kubectl` as the sandbox of `Cli.hpp`
 - ⚪ 14 tests on `Cli.hpp`
+
+---
+
+## 🟡 Later, if it ever earns its place
+
+- a `template/` folder per repository, holding the fragments devkit would
+  compose into a generated app or sandbox: the includes, the members, and
+  what belongs in init/event/update/draw. ecs would bring its registry,
+  raylib_impl its window, i18n its locales, and `devkit examples add` would
+  assemble a sandbox that already runs.
+
+  Deliberately postponed: the build's quality comes first, and this touches
+  every repository at once.

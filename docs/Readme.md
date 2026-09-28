@@ -4,6 +4,7 @@
 
 The command line that creates and maintains P-E-R-R-Y repositories.
 
+[![Build](https://github.com/P-E-R-R-Y/devkit/actions/workflows/tests.yml/badge.svg)](https://github.com/P-E-R-R-Y/devkit/actions)
 [![Docs](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://p-e-r-r-y.github.io/devkit)
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 

@@ -18,7 +18,8 @@ int init(const cli::Call &call) {
     const std::string name = std::filesystem::current_path().filename().string();
 
     if (std::filesystem::exists(configuration) && !call.has("force")) {
-        std::cerr << configuration.string() << " already exists, --force to overwrite it" << std::endl;
+        std::cerr << configuration.string() << " already exists, --force to overwrite it\n"
+                  << "(the generated files are kept either way)" << std::endl;
         return 1;
     }
 
@@ -71,8 +72,10 @@ int init(const cli::Call &call) {
         std::cerr << "cannot write: " << configuration.string() << std::endl;
         return 1;
     }
-    //generation follows: init yields a ready project, not a file to act on
-    if (generate(call.has("force")) != 0)
+    /* Generation follows, and never forces: --force bears on config.yaml
+     * alone. Passing it down would rewrite a CMakeLists carrying custom
+     * blocks outside the devkit: markers. */
+    if (generate(false) != 0)
         return 1;
     std::cout << name << " " << call.value("version") << " initialised" << std::endl;
     return 0;

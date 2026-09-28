@@ -12,6 +12,7 @@
 #include "Config.hpp"
 #include "cmd.hpp"
 
+#include <cctype>
 #include <iostream>
 
 namespace {
@@ -89,23 +90,22 @@ namespace {
         if (!config.tests)
             return "";
 
-        //the tests link the library when there is one, the static by
-        //preference: the shared one goes through dynamic loading
-        const std::string linked = config.wants("static") ? "\n  ${PROJECT_NAME}_static"
-                                 : config.wants("shared") ? "\n  ${PROJECT_NAME}_shared" : "";
-
-        return "# ----------- tests -----------\n"
+        /*
+         * The tests take the objects rather than link a library: an app-only
+         * repository produces none, and its tests reached no symbol at all.
+         * DEVKIT_LINK brings the dependencies, which the objects do not carry.
+         */
+        return "#----------- tests -----------\n"
                "\nenable_testing()\n"
                "\nfile(GLOB TEST_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)\n"
-               "\n#sans ce test, un dossier tests/ vide ferait echouer add_executable\n"
+               "\n#without this test, an empty tests/ folder would fail add_executable\n"
                "if (TEST_SOURCES)\n"
-               "  add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES})\n"
+               "  add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES}"
+               " $<TARGET_OBJECTS:${PROJECT_NAME}_objects>)\n"
                "\n  target_include_directories(${PROJECT_NAME}_tests PUBLIC\n"
                "    ${CMAKE_CURRENT_SOURCE_DIR}/includes\n"
                "  )\n"
-               "\n  target_link_libraries(${PROJECT_NAME}_tests\n"
-               "  gtest_main" + linked + "\n"
-               "  )\n"
+               "\n  target_link_libraries(${PROJECT_NAME}_tests gtest_main ${DEVKIT_LINK})\n"
                "\n  include(GoogleTest)\n"
                "  gtest_discover_tests(${PROJECT_NAME}_tests)\n"
                "endif()\n";
@@ -141,7 +141,9 @@ namespace {
             return "";
 
         std::vector<std::string> vendors;
-        std::string out;
+        std::string out = "#----------- examples -----------\n"
+                          "#one folder each under examples/, with their own main, so that none\n"
+                          "#of them crosses the product's\n\n";
 
         for (const Repository &repository : config.example.repositories)
             vendors.push_back(repository.name);
@@ -189,7 +191,8 @@ namespace {
                              "  target_link_libraries(${target} PUBLIC ${DEVKIT_LINK})\n"
                              "endforeach()\n");
         assets::replaceBlock("CMakeLists.txt", "shared", shared.empty() ? "" :
-                             "# copiees a cote du binaire, pour etre chargees a l'execution\n"
+                             "#----------- shared dependencies -----------\n"
+                             "#copied next to the binary, to be loaded at run time\n\n"
                              "set(DEVKIT_SHARED " + shared + ")\n"
                              "\nforeach(shared IN LISTS DEVKIT_SHARED)\n"
                              "  foreach(target IN LISTS DEVKIT_TARGETS)\n"
@@ -199,6 +202,63 @@ namespace {
                              "$<TARGET_FILE_DIR:${target}>/lib/)\n"
                              "  endforeach()\n"
                              "endforeach()\n");
+    }
+
+    /** @brief The dotted numbers of a tag, "v1.2.3" -> {1, 2, 3}. */
+    std::vector<int> numbers(const std::string &tag) {
+        std::vector<int> parts;
+        std::string digits;
+
+        for (const char letter : tag + ".")
+            if (std::isdigit(static_cast<unsigned char>(letter)))
+                digits += letter;
+            else if (letter == '.') {
+                parts.push_back(digits.empty() ? 0 : std::stoi(digits));
+                digits.clear();
+            }
+        return parts;
+    }
+
+    /** @brief The tag a generated find module pins, "" when it says nothing. */
+    std::string pinned(const std::string &name) {
+        const std::string module =
+            assets::read(std::filesystem::path("cmake") / ("Find" + assets::capitalize(name) + ".cmake"));
+        const std::string mark = "set(tag ";
+        const std::size_t from = module.find(mark);
+
+        if (from == std::string::npos)
+            return "";
+
+        const std::size_t start = from + mark.size();
+        const std::size_t end = module.find(')', start);
+
+        return end == std::string::npos ? "" : module.substr(start, end - start);
+    }
+
+    /**
+     * @brief Reports where config.yaml and the find modules disagree.
+     *
+     * A find module is never rewritten, so it can be retouched by hand and
+     * drift away. CMake reads the module, so the module is what the build
+     * actually uses - and config.yaml quietly stops telling the truth.
+     */
+    void drift(const Config &config) {
+        std::vector<Repository> all = config.repositories;
+
+        all.insert(all.end(), config.example.repositories.begin(), config.example.repositories.end());
+        for (const Repository &one : all) {
+            const std::string module = pinned(one.name);
+
+            if (module.empty() || module == one.tag)
+                continue;
+            std::cerr << one.name << ": config.yaml says " << one.tag << ", cmake/Find"
+                      << assets::capitalize(one.name) << ".cmake pins " << module
+                      << " - the build uses the module" << std::endl;
+            if (numbers(one.tag) < numbers(module))
+                std::cerr << "  config.yaml is the older of the two: a downgrade, if you meant it"
+                          << std::endl;
+            std::cerr << "  devkit sync --force rewrites the module from config.yaml" << std::endl;
+        }
     }
 
     /** @brief Writes a template, unless the target already exists. */
@@ -282,6 +342,8 @@ int generate(bool force) {
         once("cmake/Find.cmake",
              std::filesystem::path("cmake") / ("Find" + assets::capitalize(repository.name) + ".cmake"),
              {{"repository", repository.name}, {"tag", repository.tag}}, force);
+
+    drift(config);
 
     blocks(config);
 

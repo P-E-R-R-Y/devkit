@@ -71,6 +71,10 @@ namespace devkit {
                                                one["linkage"].as<std::string>("static")});
             const YAML::Node example = root["example"];
 
+            //a project without a sandbox has no example key at all, and
+            //indexing an absent node throws rather than reading empty
+            if (!example)
+                return config;
             for (const YAML::Node &one : example["repositories"])
                 config.example.repositories.push_back({one["name"].as<std::string>(""),
                                                       one["tag"].as<std::string>("main"),

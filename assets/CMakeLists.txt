@@ -14,9 +14,13 @@ list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # --- devkit:end ---
 
 #----------- sources -----------
+# everything under sources/ belongs to the object stage, save the two files
+# that belong to one output. Drop a .cpp in and it is picked up.
 
-set(SOURCE_FILES
-    sources/no_source.cpp
+file(GLOB SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/sources/*.cpp)
+list(REMOVE_ITEM SOURCE_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/symbole.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
 )
 
 #----------- targets -----------
@@ -45,10 +49,6 @@ endforeach()
 
 # --- devkit:shared ---
 # --- devkit:end ---
-
-#----------- example -----------
-# The sandboxes: one folder each under examples/, with their own main, so
-# that none of them crosses the product's.
 
 # --- devkit:example ---
 # --- devkit:end ---

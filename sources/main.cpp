@@ -36,7 +36,7 @@ static const cli::Command devkit{
         {.name = "init", .help = "sets up the current directory",
          .options = {
              {.name = "kind", .alias = "k", .help = "what the repository produces, cumulative",
-              .arity = cli::Arity::Many, .choices = {"static", "shared", "app"}, .fallback = "static"},
+              .arity = cli::Arity::Many, .choices = {"static", "shared", "app"}, .required = true},
              {.name = "version", .alias = "v", .help = "project version", .fallback = "v0.1.0"},
              {.name = "cmake", .help = "minimum CMake version", .fallback = "3.24"},
              {.name = "force", .alias = "f", .help = "overwrites an existing config.yaml", .arity = cli::Arity::Flag},

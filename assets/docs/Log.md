@@ -5,4 +5,4 @@ in the plan, no code written yet.
 
 ## {{version}}
 
-- 🟢 premier jet
+- 🟢 first cut
