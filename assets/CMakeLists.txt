@@ -14,13 +14,14 @@ list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 # --- devkit:end ---
 
 #----------- sources -----------
-# everything under sources/ belongs to the object stage, save the two files
-# that belong to one output. Drop a .cpp in and it is picked up.
+# Yours to maintain: devkit writes this list once and never touches it again.
+# Everything here feeds the object stage, and every output helps itself.
+#
+# The two entry points sit at the root, one per role, outside this list:
+# main.cpp belongs to the executable, symbole.cpp to the shared library.
 
-file(GLOB SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/sources/*.cpp)
-list(REMOVE_ITEM SOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/symbole.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
+set(SOURCE_FILES
+    sources/no_source.cpp
 )
 
 #----------- targets -----------

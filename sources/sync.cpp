@@ -28,7 +28,7 @@ namespace {
      *
      * Only the outputs kind asks for are written. A missing output leaves
      * the file clean: nothing to uncomment, and nothing pointing at a
-     * sources/main.cpp that devkit never wrote.
+     * main.cpp that devkit never wrote.
      *
      * Every target carries its suffix: a target name is unique across the
      * whole tree, and two add_library of the same name stop the configure.
@@ -63,10 +63,10 @@ namespace {
         }
         if (shared) {
             names += " ${PROJECT_NAME}_shared";
-            //each output takes its own file: no_source.cpp feeds the object
-            //stage, symbole.cpp gives the loader its entry points, main.cpp
-            //gives the app its own
-            out += "\nadd_library(${PROJECT_NAME}_shared SHARED " + objects + " sources/symbole.cpp)\n"
+            //each output takes its own file, one per role at the root:
+            //symbole.cpp gives the loader its entry points, main.cpp gives
+            //the app its own, and sources/ feeds the object stage
+            out += "\nadd_library(${PROJECT_NAME}_shared SHARED " + objects + " symbole.cpp)\n"
                    //hunter.dylib rather than libhunter.dylib: the file name is
                    //what serves as the loading key
                    "set_target_properties(${PROJECT_NAME}_shared PROPERTIES"
@@ -76,7 +76,7 @@ namespace {
         }
         if (app) {
             names += " ${PROJECT_NAME}_app";
-            out += "\nadd_executable(${PROJECT_NAME}_app " + objects + " sources/main.cpp)\n"
+            out += "\nadd_executable(${PROJECT_NAME}_app " + objects + " main.cpp)\n"
                    "set_target_properties(${PROJECT_NAME}_app PROPERTIES"
                    " OUTPUT_NAME ${PROJECT_NAME})\n";
         }
@@ -297,9 +297,9 @@ int generate(bool force) {
     once("gitignore", ".gitignore", {}, force);
 
     if (config.wants("app"))
-        once("main.cpp", "sources/main.cpp", values, force);
+        once("main.cpp", "main.cpp", values, force);
     if (config.wants("shared"))
-        once("symbole.cpp", "sources/symbole.cpp", values, force);
+        once("symbole.cpp", "symbole.cpp", values, force);
     //the object stage refuses to live without a source, and a header-only
     //repository has none: this empty file feeds it
     if (force || !std::filesystem::exists("sources/no_source.cpp"))

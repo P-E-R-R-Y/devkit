@@ -46,6 +46,30 @@ namespace devkit {
         return generate(false);
     }
 
+    /**
+     * @brief Carries a tag into an existing find module, line for line.
+     *
+     * Asking devkit for a version and seeing the module keep the old one was
+     * the worst of both worlds. Only the set(tag ...) line moves, so a module
+     * reworked by hand keeps everything else.
+     */
+    inline void retag(const std::string &name, const std::string &tag) {
+        const std::filesystem::path module =
+            std::filesystem::path("cmake") / ("Find" + assets::capitalize(name) + ".cmake");
+        const std::string text = assets::read(module);
+        const std::string mark = "set(tag ";
+        const std::size_t from = text.find(mark);
+
+        if (text.empty() || from == std::string::npos)
+            return;
+
+        const std::size_t end = text.find(')', from);
+
+        if (end == std::string::npos)
+            return;
+        assets::write(module, text.substr(0, from + mark.size()) + tag + text.substr(end));
+    }
+
     /** @brief Where a dependency lives: the product's list, or the sandboxes'. */
     inline YAML::Node dependencies(YAML::Node &root, bool sandbox) {
         return sandbox ? root["example"]["repositories"] : root["repositories"];

@@ -3,6 +3,22 @@
 Markers: 🟢 added · 🔴 breaking · 🔵 fix · ⚪ internal or docs · 🟡 proposed
 in the plan, no code written yet.
 
+## v0.4.0
+
+- 🔴 the two entry points move to the root, one per role: `main.cpp` for the
+  executable, `symbole.cpp` for the shared library. `sources/` now holds the
+  object stage alone, with no exception to carve out of it
+- 🔴 `SOURCE_FILES` goes back to an explicit list, yours to maintain. It sits
+  outside the `devkit:` markers, so devkit writes it once and never again: a
+  file appears in the diff when you add it, and a draft left behind compiles
+  nothing
+- 🔵 `deps add` and `deps set -v` now carry the tag into the find module,
+  rewriting that one line and leaving everything around it alone. Asking for
+  a version and watching the module keep the old one was the worst of both
+- 🟢 `tests/api.sh`: 130 checks over every command and every transition a
+  project goes through, each stating what it proves, ending on a class
+  written by hand that a sandbox uses, compiles against and breaks with
+
 ## v0.3.0
 
 - 🔴 `-k` is now required: `devkit init` no longer picks static in silence

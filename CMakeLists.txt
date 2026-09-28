@@ -20,11 +20,21 @@ find_package(GoogleTest REQUIRED)
 # --- devkit:end ---
 
 #----------- sources -----------
+# Yours to maintain: devkit writes this list once and never touches it again.
+# Everything here feeds the object stage, and every output helps itself.
+#
+# One action per file. main.cpp sits at the root, it belongs to the
+# executable rather than to the object stage.
 
-# une action par fichier : ajouter une commande = ajouter un .cpp. main.cpp
-# en sort, il appartient a l'executable et pas a l'etage objet.
-file(GLOB SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/sources/*.cpp)
-list(REMOVE_ITEM SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp)
+set(SOURCE_FILES
+    sources/clean.cpp
+    sources/deps.cpp
+    sources/examples.cpp
+    sources/info.cpp
+    sources/init.cpp
+    sources/list.cpp
+    sources/sync.cpp
+)
 
 #----------- targets -----------
 # Les sources sont compilees une seule fois, dans une bibliotheque OBJECT,
@@ -37,7 +47,7 @@ set_target_properties(${PROJECT_NAME}_objects PROPERTIES POSITION_INDEPENDENT_CO
 
 set(DEVKIT_OBJECTS ${PROJECT_NAME}_objects)
 
-add_executable(${PROJECT_NAME}_app $<TARGET_OBJECTS:${PROJECT_NAME}_objects> sources/main.cpp)
+add_executable(${PROJECT_NAME}_app $<TARGET_OBJECTS:${PROJECT_NAME}_objects> main.cpp)
 set_target_properties(${PROJECT_NAME}_app PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
 
 set(DEVKIT_TARGETS ${PROJECT_NAME}_app)

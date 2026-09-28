@@ -95,6 +95,7 @@ int depsAdd(const cli::Call &call) {
                   << "two builds may differ" << std::endl;
 
     list.push_back(entry(name, tag, linkage));
+    devkit::retag(name, tag);
     if (write(root, list, sandbox) != 0)
         return 1;
     std::cout << name << " " << tag << " added" << (sandbox ? " to the sandboxes" : "") << std::endl;
@@ -116,8 +117,10 @@ int depsSet(const cli::Call &call) {
         std::cerr << name << " is not a dependency, use devkit deps add" << std::endl;
         return 1;
     }
-    if (!call.value("version").empty())
+    if (!call.value("version").empty()) {
         one["tag"] = call.value("version");
+        devkit::retag(name, call.value("version"));
+    }
     if (call.has("shared"))
         one["linkage"] = "shared";
     one.SetStyle(YAML::EmitterStyle::Block);

@@ -27,6 +27,12 @@ run() {
     "$devkit" init -k $kinds $sandboxes >/dev/null 2>&1 || { report "$name" "init"; return 1; }
 
     printf 'int answer() { return 42; }\n' > sources/answer.cpp
+    # the list is the repository's own, as it is for anyone adding a file
+    python3 -c "
+import sys
+text = open('CMakeLists.txt').read()
+open('CMakeLists.txt', 'w').write(text.replace('    sources/no_source.cpp', '    sources/no_source.cpp\n    sources/answer.cpp', 1))
+"
     mkdir -p includes tests
     printf 'int answer();\n' > includes/Answer.hpp
     printf '#include "Answer.hpp"\n#include <gtest/gtest.h>\nTEST(A, B) { EXPECT_EQ(answer(), 42); }\n' \
