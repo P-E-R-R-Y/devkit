@@ -10,17 +10,32 @@ in the plan, no code written yet.
 - 🟢 `Cli.hpp` : un arbre de commandes declare comme une donnee, arite
   `Flag`/`One`/`Many`, choix imposes, defauts, options requises, alias de
   commandes, `-h`/`--help` partout
-- 🟢 `config.yaml` comme source unique : `init`, `set`, `del`, `get`,
-  `build`, `clean`, et `list` pour les depots publics de P-E-R-R-Y
-- 🟢 `init <nom> -k static shared app` : les trois sorties sont toujours
-  ecrites dans le CMakeLists, celles que le depot ne produit pas restent
-  commentees
-- 🟢 `init --example` : un bac a sable dans `example/`, avec son propre main
-  et une classe `<Nom>App : IApp` qui ouvre une fenetre ; il epingle icore et
-  raylib_impl a part, `set` ne lie que le produit
-- 🟢 `build` regenere les blocs `devkit:*` du CMakeLists sans toucher au code
-  ecrit a la main, et ecrit un `cmake/Find<Dep>.cmake` par dependance
+- 🟢 `config.yaml` comme source unique : `init`, `deps`, `examples`, `info`,
+  `list`, `sync`, `clean`
+- 🟢 `init -k static shared app` dans le dossier courant : le nom vient du
+  repertoire, et seules les sorties demandees sont ecrites
+- 🟢 chaque cible porte son suffixe (`_static`, `_shared`, `_app`), et
+  `OUTPUT_NAME` les fait toutes sortir sous le nom du projet ; un alias donne
+  le nom nu a la statique pour les consommateurs existants
+- 🟢 etage OBJECT : les sources sont compilees une fois, les trois sorties se
+  servent des memes `.o`, en `POSITION_INDEPENDENT_CODE`
+- 🟢 `sources/no_source.cpp`, `sources/symbole.cpp` et `sources/main.cpp` :
+  un fichier par sortie, ecrit seulement si la sortie existe
+- 🟢 `deps add|rm|set <dep> [-v <tag>] [-e]` : `-e` porte sur le pool des
+  bacs a sable au lieu du produit
+- 🟢 `deps outdated` compare les versions epinglees aux dernieres etiquettes
+  de l'organisation
+- 🟢 `examples add|rm <nom>` : un dossier par sujet d'essai, avec son `main`
+  et sa classe `<Nom>App : IApp`, cible `<projet>_<nom>`
+- 🟢 la generation suit chaque commande qui touche a la configuration ;
+  `sync` reste pour un `config.yaml` edite a la main
+- 🟢 `clean` vide `build/` en conservant le dossier
 - 🟢 `install.sh` : symlink par defaut, `--copy` et `--prefix` au choix, les
   assets resolus par `$DEVKIT_ASSETS` puis `~/.local/share/devkit`
-- 🟢 `list` interroge GraphQL avec `GITHUB_TOKEN`, sans dependre de `gh`
-- ⚪ 14 tests sur `Cli.hpp`, et `examples/kubectl.cpp` comme demonstration
+- 🔵 `cmake/Find<Dep>.cmake` n'est plus reecrit : un module retouche a la
+  main survivait mal a l'ajout d'une dependance
+- 🔵 une dependance ajoutee sortait en `~` : yaml-cpp ne propage pas
+  l'ecriture faite dans un noeud nul recu en parametre
+- ⚪ devkit suit son propre format : etage objet, cinq blocs `devkit:`, et
+  `examples/kubectl` comme bac a sable de `Cli.hpp`
+- ⚪ 14 tests sur `Cli.hpp`

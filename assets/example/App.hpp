@@ -1,6 +1,6 @@
 /**
  * @file {{appclass}}.hpp
- * @brief Le bac a sable : de quoi voir tourner {{name}}.
+ * @brief Le bac a sable {{example}} : de quoi voir tourner {{name}}.
  *
  * Ecrit une seule fois par devkit, puis il est a toi. Taille dedans.
  */
@@ -16,7 +16,7 @@ class {{appclass}} : public IApp {
 
     public:
         {{appclass}}() {
-            _window = _graphic->createWindow(900, 600, "{{name}}");
+            _window = _graphic->createWindow(900, 600, "{{name}} - {{example}}");
         }
 
         ~{{appclass}}() override {

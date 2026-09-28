@@ -19,6 +19,20 @@ namespace devkit {
         std::string linkage = "static";   ///< static : on lie. shared : on copie a cote.
     };
 
+    /**
+     * @brief Les bacs a sable : des dependances communes, et un dossier
+     *        par sujet d'essai.
+     *
+     * examples/<nom>/ donne la cible <projet>_<nom>. Les dependances sont
+     * epinglees une fois et partagees, chaque dossier reste independant.
+     */
+    struct Example {
+        std::vector<Repository> repositories;
+        std::vector<std::string> names;
+
+        bool empty() const { return names.empty(); }
+    };
+
     struct Config {
         std::string name;
         std::string brief;
@@ -29,7 +43,7 @@ namespace devkit {
         bool documentation = true;
         bool cicd = true;
         std::vector<Repository> repositories;
-        std::vector<Repository> example;      ///< posees par --example, liees au bac a sable
+        Example example;                      ///< posees par --example et set example
 
         /** @brief Lit le fichier. Leve YAML::Exception s'il est illisible. */
         static Config load(const std::string &file) {
@@ -55,10 +69,14 @@ namespace devkit {
                 config.repositories.push_back({one["name"].as<std::string>(""),
                                                one["tag"].as<std::string>("main"),
                                                one["linkage"].as<std::string>("static")});
-            for (const YAML::Node &one : root["example"])
-                config.example.push_back({one["name"].as<std::string>(""),
-                                          one["tag"].as<std::string>("main"),
-                                          one["linkage"].as<std::string>("static")});
+            const YAML::Node example = root["example"];
+
+            for (const YAML::Node &one : example["repositories"])
+                config.example.repositories.push_back({one["name"].as<std::string>(""),
+                                                      one["tag"].as<std::string>("main"),
+                                                      one["linkage"].as<std::string>("static")});
+            for (const YAML::Node &one : example["names"])
+                config.example.names.push_back(one.as<std::string>());
             return config;
         }
 

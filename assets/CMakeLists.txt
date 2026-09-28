@@ -20,14 +20,19 @@ set(SOURCE_FILES
 )
 
 #----------- targets -----------
-# Les trois sorties sont toujours ecrites. Celles que ce depot ne produit
-# pas sont commentees : les decommenter, et ajouter la cible a
-# DEVKIT_TARGETS, suffit a les activer.
+# Les sources sont compilees une seule fois, dans une bibliotheque OBJECT,
+# et les sorties se servent des memes .o.
+#
+# Seul ce que kind demande est ecrit. Pour ajouter une sortie, ajoutez-la a
+# kind dans config.yaml et relancez devkit build.
 
 # --- devkit:targets ---
 # --- devkit:end ---
 
-foreach(target IN LISTS DEVKIT_TARGETS)
+# l'etage objet compile les sources : il lui faut les memes includes et les
+# memes options que les sorties. $<TARGET_OBJECTS:> ne transporte que les .o,
+# donc les sorties les recoivent aussi, pour ceux qui les consommeront.
+foreach(target IN LISTS DEVKIT_OBJECTS DEVKIT_TARGETS)
   target_include_directories(${target} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/includes
   )
