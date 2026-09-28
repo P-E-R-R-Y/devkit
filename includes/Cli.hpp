@@ -1,16 +1,16 @@
 /**
  * @file Cli.hpp
- * @brief Une ligne de commande a la cobra, declaree comme une donnee.
+ * @brief A cobra-like command line, declared as data.
  *
- * L'arbre entier s'ecrit en un seul initialiseur : chaque Command porte ses
- * options, ses arguments et ses sous-commandes. cli::execute() le parcourt.
+ * The whole tree is written in a single initializer: each Command carries its
+ * options, its arguments and its sub-commands. cli::execute() walks it.
  *
- * - un mot qui nomme une sous-commande, ou l'un de ses alias, descend dans
- *   l'arbre ; les autres mots sont des arguments ;
- * - une option vaut pour la commande qui la declare et pour ses descendantes,
- *   et se place n'importe ou apres elle ;
- * - Flag : aucune valeur, One : une, Many : jusqu'a la prochaine option ;
- * - repetee, une option ecrase la precedente ; "-5" est une valeur.
+ * - a word naming a sub-command, or one of its aliases, descends the tree;
+ *   every other word is an argument;
+ * - an option holds for the command declaring it and for its descendants,
+ *   and may sit anywhere after it;
+ * - Flag: no value, One: exactly one, Many: until the next option;
+ * - repeated, an option overrides the previous one; "-5" is a value.
  *
  * @addtogroup devkit
  * @{
@@ -30,36 +30,36 @@
 
 namespace cli {
 
-    /** @brief Pas de limite, pour Arguments::max. */
+    /** @brief No limit, for Arguments::max. */
     inline constexpr std::size_t many = SIZE_MAX;
 
     enum class Arity { 
-        Flag, //< aucune valeur, presence = true 
-        One, //< une valeur, presence = true
-        Many //< zero ou plusieurs valeurs, presence = true
+        Flag, //< no value, presence = true
+        One,  //< one value, presence = true
+        Many  //< zero or more values, presence = true
     };
 
     struct Option {
         std::string name;
-        std::string alias = "";                  ///< "n" pour -n
+        std::string alias = "";                  ///< "n" for -n
         std::string help = "";
         Arity arity = Arity::One;
-        std::vector<std::string> choices = {};   ///< vide : n'importe quelle valeur
-        std::string fallback = "";               ///< la valeur quand l'option est absente
+        std::vector<std::string> choices = {};   ///< empty: any value goes
+        std::string fallback = "";               ///< the value when the option is absent
         bool required = false;
     };
 
-    /** @brief Les mots libres qu'une commande accepte. Par defaut : aucun. */
+    /** @brief The free words a command accepts. None by default. */
     struct Arguments {
-        std::string name = "argument";           ///< pour l'aide : <nom>
+        std::string name = "argument";           ///< for the help: <name>
         std::size_t min = 0;
         std::size_t max = 0;
         std::vector<std::string> choices = {};
     };
 
-    /** @brief Ce que recoit une commande quand elle s'execute. */
+    /** @brief What a command receives when it runs. */
     struct Call {
-        std::vector<std::string> path;           ///< get pods, alias resolus
+        std::vector<std::string> path;           ///< get pods, aliases resolved
         std::vector<std::string> arguments;      ///< nginx redis
         std::map<std::string, std::vector<std::string>> options;
 
@@ -127,14 +127,14 @@ namespace cli {
             return nullptr;
         }
 
-        /** @brief L'aide, connue de toutes les commandes. */
-        inline const Option help{.name = "help", .alias = "h", .help = "cette aide", .arity = Arity::Flag};
+        /** @brief The help, known to every command. */
+        inline const Option help{.name = "help", .alias = "h", .help = "this help", .arity = Arity::Flag};
 
         /**
-         * @brief Du plus proche au plus lointain, puis l'aide.
+         * @brief From the nearest to the farthest, then the help.
          *
-         * L'aide passe en dernier : une commande qui declare son propre -h
-         * le garde, et l'aide reste joignable par --help.
+         * The help comes last: a command declaring its own -h keeps it, and
+         * the help stays reachable through --help.
          */
         inline const Option *find(const Path &path, const std::string &key) {
             const bool brief = key.rfind("--", 0) != 0;
@@ -147,7 +147,7 @@ namespace cli {
             return (brief ? help.alias : help.name) == bare ? &help : nullptr;
         }
 
-        /** @brief Ranger les mots. Rend la premiere erreur, "" sinon. */
+        /** @brief Sort the words. Returns the first error, "" otherwise. */
         inline std::string parse(int argc, const char *const *argv, Path &path, Call &call) {
             const auto isValue = [&](int at) { return at < argc && !isOption(argv[at]); };
 
@@ -155,7 +155,7 @@ namespace cli {
                 const std::string token = argv[i];
 
                 if (!isOption(token)) {
-                    //on descend tant qu'aucun argument n'est apparu
+                    //we descend as long as no argument has shown up
                     const Command *next = call.arguments.empty() ? child(*path.back(), token) : nullptr;
 
                     if (next) {
@@ -171,7 +171,7 @@ namespace cli {
                 const Option *option = find(path, key);
 
                 if (!option)
-                    return "option inconnue : " + key;
+                    return "unknown option: " + key;
 
                 auto &values = call.options[option->name];
 
@@ -180,7 +180,7 @@ namespace cli {
                     values.push_back(token.substr(equal + 1));
                 else if (option->arity == Arity::One) {
                     if (!isValue(i + 1))
-                        return "valeur manquante : " + key;
+                        return "missing value: " + key;
                     values.push_back(argv[++i]);
                 }
                 if (option->arity == Arity::Many)
@@ -190,7 +190,7 @@ namespace cli {
             return "";
         }
 
-        /** @brief La premiere valeur hors des choix permis, "" si tout va bien. */
+        /** @brief The first value outside the allowed choices, "" if all is well. */
         inline std::string outside(const std::vector<std::string> &values,
                                    const std::vector<std::string> &choices) {
             if (choices.empty())
@@ -201,7 +201,7 @@ namespace cli {
             return "";
         }
 
-        /** @brief Options requises, valeurs imposees, defauts, nombre d'arguments. */
+        /** @brief Required options, imposed values, defaults, argument count. */
         inline std::string check(const Path &path, Call &call) {
             for (const Command *node : path)
                 for (const Option &o : node->options) {
@@ -209,7 +209,7 @@ namespace cli {
 
                     if (given == call.options.end()) {
                         if (o.required)
-                            return "option requise : --" + o.name;
+                            return "required option: --" + o.name;
                         if (!o.fallback.empty())
                             call.options[o.name] = {o.fallback};
                         continue;
@@ -217,27 +217,27 @@ namespace cli {
                     const std::string bad = outside(given->second, o.choices);
 
                     if (!bad.empty())
-                        return "--" + o.name + " n'accepte pas " + bad + " (attendu : " + join(o.choices, ", ") + ")";
+                        return "--" + o.name + " does not take " + bad + " (expected: " + join(o.choices, ", ") + ")";
                 }
 
             const Arguments &expected = path.back()->arguments;
             const std::vector<std::string> &given = call.arguments;
 
             if (given.size() < expected.min)
-                return path.back()->name + " attend au moins " + std::to_string(expected.min) + " <" + expected.name + ">";
+                return path.back()->name + " expects at least " + std::to_string(expected.min) + " <" + expected.name + ">";
             if (given.size() > expected.max)
-                return "argument en trop : " + given[expected.max];
+                return "extra argument: " + given[expected.max];
 
             const std::string bad = outside(given, expected.choices);
 
-            return bad.empty() ? "" : bad + " n'est pas un " + expected.name +
-                                      " valide (attendu : " + join(expected.choices, ", ") + ")";
+            return bad.empty() ? "" : bad + " is not a valid " + expected.name +
+                                      " (expected: " + join(expected.choices, ", ") + ")";
         }
 
         inline std::string signature(const Option &o) {
             if (o.arity == Arity::Flag)
                 return "";
-            const std::string inside = o.choices.empty() ? "valeur" : join(o.choices, "|");
+            const std::string inside = o.choices.empty() ? "value" : join(o.choices, "|");
 
             return " <" + inside + (o.arity == Arity::Many ? "...>" : ">");
         }
@@ -247,44 +247,44 @@ namespace cli {
             const Arguments &a = c.arguments;
             const std::string name = fullName(path);
 
-            std::printf("%s%s%s\n\nusage : %s", name.c_str(), c.help.empty() ? "" : " - ", c.help.c_str(), name.c_str());
+            std::printf("%s%s%s\n\nusage: %s", name.c_str(), c.help.empty() ? "" : " - ", c.help.c_str(), name.c_str());
             if (!c.commands.empty())
-                std::printf(" <commande>");
+                std::printf(" <command>");
             if (a.max > 0)
                 std::printf(a.min > 0 ? " <%s%s>" : " [%s%s]", a.name.c_str(), a.max > 1 ? "..." : "");
             std::printf(" [options]\n");
 
             if (!c.commands.empty())
-                std::printf("\ncommandes :\n");
+                std::printf("\ncommands:\n");
             for (const Command &sub : c.commands) {
                 const std::string label = sub.name + (sub.aliases.empty() ? "" : " (" + join(sub.aliases, ", ") + ")");
 
                 std::printf("  %-24s %s\n", label.c_str(), sub.help.c_str());
             }
 
-            std::printf("\noptions :\n");
+            std::printf("\noptions:\n");
             for (const Command *node : path)
                 for (const Option &o : node->options) {
                     const std::string alias = o.alias.empty() ? "" : "-" + o.alias + ",";
-                    const std::string note = o.required ? " (requise)"
-                                           : o.fallback.empty() ? "" : " (defaut : " + o.fallback + ")";
+                    const std::string note = o.required ? " (required)"
+                                           : o.fallback.empty() ? "" : " (default: " + o.fallback + ")";
 
                     std::printf("  %-3s --%-28s %s%s\n", alias.c_str(), (o.name + signature(o)).c_str(),
                                 o.help.c_str(), note.c_str());
                 }
-            std::printf("  %-3s --%-28s %s\n", find(path, "-h") == &help ? "-h," : "", "help", "cette aide");
+            std::printf("  %-3s --%-28s %s\n", find(path, "-h") == &help ? "-h," : "", "help", "this help");
         }
 
         inline int fail(const Path &path, const std::string &error) {
-            std::fprintf(stderr, "erreur : %s\nvoir : %s --help\n", error.c_str(), fullName(path).c_str());
+            std::fprintf(stderr, "error: %s\nsee: %s --help\n", error.c_str(), fullName(path).c_str());
             return 1;
         }
     }
 
     /**
-     * @brief Parse, verifie, puis execute la commande atteinte.
+     * @brief Parse, check, then run the command that was reached.
      *
-     * @return le code de l'action, 1 sur erreur
+     * @return the action's code, 1 on error
      */
     inline int execute(const Command &root, int argc, const char *const *argv) {
         detail::Path path{&root};
@@ -301,9 +301,9 @@ namespace cli {
         }
         if (!target.run) {
             if (!call.arguments.empty())
-                return detail::fail(path, "commande inconnue : " + call.arguments.front());
+                return detail::fail(path, "unknown command: " + call.arguments.front());
             detail::usage(path);
-            return argc > 1 ? 1 : 0;   //la commande nue affiche l'aide sans se plaindre
+            return argc > 1 ? 1 : 0;   //the bare command prints the help without complaining
         }
         if (const std::string error = detail::check(path, call); !error.empty())
             return detail::fail(path, error);

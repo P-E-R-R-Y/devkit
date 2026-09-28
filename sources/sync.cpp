@@ -1,11 +1,11 @@
 /**
  * @file sync.cpp
- * @brief La generation du projet depuis config.yaml.
+ * @brief Generating the project from config.yaml.
  *
- * Le CMakeLists produit est celui de maths, ecs et system, aux variables
- * pres. Regle d'ecrasement : un fichier deja present n'est jamais remplace,
- * sauf avec --force. Les blocs marques "devkit:" font exception, ils
- * appartiennent a l'outil et sont regeneres a chaque passage.
+ * The CMakeLists produced is the one of maths, ecs and system, to the
+ * variables near. Overwrite rule: a file already present is never replaced,
+ * unless --force. The blocks marked "devkit:" are the exception, they belong
+ * to the tool and are regenerated on every pass.
  */
 
 #include "Assets.hpp"
@@ -20,35 +20,35 @@ namespace {
     using devkit::Repository;
 
     /**
-     * @brief L'etage objet, puis ce que ce depot produit.
+     * @brief The object stage, then whatever this repository produces.
      *
-     * Les sources sont compilees une seule fois, dans une bibliotheque
-     * OBJECT, et les sorties se servent des memes .o.
+     * The sources are compiled once, in an OBJECT library, and the outputs
+     * all help themselves to the same .o.
      *
-     * Seules les sorties demandees par kind sont ecrites. Une sortie
-     * absente laisse le fichier propre : rien a decommenter, et rien qui
-     * renvoie a un sources/main.cpp que devkit n'a pas ecrit.
+     * Only the outputs kind asks for are written. A missing output leaves
+     * the file clean: nothing to uncomment, and nothing pointing at a
+     * sources/main.cpp that devkit never wrote.
      *
-     * Chaque cible porte son suffixe : un nom de cible est unique pour tout
-     * l'arbre, et deux add_library du meme nom arretent le configure.
-     * OUTPUT_NAME rend le suffixe invisible sur le disque, ou tout sort
-     * sous le nom du projet.
+     * Every target carries its suffix: a target name is unique across the
+     * whole tree, and two add_library of the same name stop the configure.
+     * OUTPUT_NAME makes the suffix invisible on disk, where everything comes
+     * out under the project's name.
      *
-     * L'alias donne le nom nu a la statique, ou a la partagee faute de
-     * mieux : les depots qui ecrivent encore <nom> continuent de compiler.
+     * The alias gives the bare name to the static one, or to the shared one
+     * for want of better: repositories still writing <name> keep building.
      */
     std::string targets(const Config &config) {
         const bool shared = config.wants("shared");
         const bool app = config.wants("app");
-        //sans rien de demande, il reste une statique : un depot produit
-        //toujours au moins une sortie
+        //with nothing asked for, a static remains: a repository always
+        //produces at least one output
         const bool statique = config.wants("static") || (!shared && !app);
         const std::string objects = "$<TARGET_OBJECTS:${PROJECT_NAME}_objects>";
         std::string out;
         std::string names;
 
         out += "add_library(${PROJECT_NAME}_objects OBJECT ${SOURCE_FILES})\n"
-               //une statique peut finir dans une partagee en aval : PIC des le depart
+               //a static may end up inside a shared one downstream: PIC from the start
                "set_target_properties(${PROJECT_NAME}_objects PROPERTIES"
                " POSITION_INDEPENDENT_CODE ON)\n"
                "\nset(DEVKIT_OBJECTS ${PROJECT_NAME}_objects)\n";
@@ -62,12 +62,12 @@ namespace {
         }
         if (shared) {
             names += " ${PROJECT_NAME}_shared";
-            //chaque sortie prend son fichier : no_source.cpp nourrit l'etage
-            //objet, symbole.cpp donne au chargeur ses points d'entree,
-            //main.cpp donne a l'app le sien
+            //each output takes its own file: no_source.cpp feeds the object
+            //stage, symbole.cpp gives the loader its entry points, main.cpp
+            //gives the app its own
             out += "\nadd_library(${PROJECT_NAME}_shared SHARED " + objects + " sources/symbole.cpp)\n"
-                   //hunter.dylib plutot que libhunter.dylib : c'est le nom de
-                   //fichier qui sert de clef de chargement
+                   //hunter.dylib rather than libhunter.dylib: the file name is
+                   //what serves as the loading key
                    "set_target_properties(${PROJECT_NAME}_shared PROPERTIES"
                    " OUTPUT_NAME ${PROJECT_NAME} PREFIX \"\")\n";
             if (!statique)
@@ -79,18 +79,18 @@ namespace {
                    "set_target_properties(${PROJECT_NAME}_app PROPERTIES"
                    " OUTPUT_NAME ${PROJECT_NAME})\n";
         }
-        //l'alias est en lecture seule : les boucles ecrivent sur les cibles,
-        //elles ne prennent donc que les vrais noms
+        //an alias is read-only: the loops write on the targets, so they
+        //only ever take the real names
         return out + "\nset(DEVKIT_TARGETS" + names + ")\n";
     }
 
-    /** @brief Le bloc de tests, repris tel quel des autres depots. */
+    /** @brief The tests block, taken as is from the other repositories. */
     std::string tests(const Config &config) {
         if (!config.tests)
             return "";
 
-        //les tests se lient a la bibliotheque quand il y en a une, statique
-        //de preference : la partagee passe par le chargement dynamique
+        //the tests link the library when there is one, the static by
+        //preference: the shared one goes through dynamic loading
         const std::string linked = config.wants("static") ? "\n  ${PROJECT_NAME}_static"
                                  : config.wants("shared") ? "\n  ${PROJECT_NAME}_shared" : "";
 
@@ -112,11 +112,11 @@ namespace {
     }
 
     /**
-     * @brief Les dependances sous le nom de cible qu'elles portent.
+     * @brief The dependencies, under the target name they carry.
      *
-     * Un depot passe a la convention publie <nom>_static ; ceux qui n'y sont
-     * pas encore gardent le nom nu. Le if (TARGET) couvre les deux, et
-     * tombera quand tous les depots P-E-R-R-Y auront ete regeneres.
+     * A repository moved to the convention publishes <name>_static; those not
+     * there yet keep the bare name. The if (TARGET) covers both, and will
+     * fall the day every P-E-R-R-Y repository has been regenerated.
      */
     std::string resolve(const std::string &list, const std::string &names) {
         return "set(" + list + " \"\")\n"
@@ -130,11 +130,11 @@ namespace {
     }
 
     /**
-     * @brief Une cible par bac a sable, liee a ce que --example a epingle.
+     * @brief One target per sandbox, linked to whatever --example pinned.
      *
-     * examples/<nom>/ donne <projet>_<nom>. Les dependances sont communes,
-     * la bibliotheque du projet n'est liee que si kind la produit - un bac
-     * a sable reste utilisable sur un depot qui ne fait qu'une app.
+     * examples/<name>/ gives <project>_<name>. The dependencies are shared,
+     * the project's library is linked only if kind produces it - a sandbox
+     * stays usable on a repository that only makes an app.
      */
     std::string example(const Config &config) {
         if (config.example.empty())
@@ -183,8 +183,8 @@ namespace {
         assets::replaceBlock("CMakeLists.txt", "example", example(config));
         assets::replaceBlock("CMakeLists.txt", "link", linked.empty() ? "" :
                              resolve("DEVKIT_LINK", linked) +
-                             //l'etage objet a besoin des en-tetes des deps pour
-                             //compiler, les sorties en ont besoin pour lier
+                             //the object stage needs the deps' headers to compile,
+                             //the outputs need them to link
                              "\nforeach(target IN LISTS DEVKIT_OBJECTS DEVKIT_TARGETS)\n"
                              "  target_link_libraries(${target} PUBLIC ${DEVKIT_LINK})\n"
                              "endforeach()\n");
@@ -201,7 +201,7 @@ namespace {
                              "endforeach()\n");
     }
 
-    /** @brief Ecrit un gabarit, sauf si la cible existe deja. */
+    /** @brief Writes a template, unless the target already exists. */
     void once(const std::string &source, const std::filesystem::path &target,
               const std::map<std::string, std::string> &values, bool force) {
         if (force || !std::filesystem::exists(target))
@@ -211,7 +211,7 @@ namespace {
 
 int generate(bool force) {
     if (!std::filesystem::exists(configuration)) {
-        std::cerr << "aucun " << configuration.string() << " ici, lance devkit init" << std::endl;
+        std::cerr << "no " << configuration.string() << " here, run devkit init" << std::endl;
         return 1;
     }
 
@@ -220,7 +220,7 @@ int generate(bool force) {
     try {
         config = Config::load(configuration.string());
     } catch (const YAML::Exception &error) {
-        std::cerr << configuration.string() << " illisible : " << error.what() << std::endl;
+        std::cerr << configuration.string() << " unreadable: " << error.what() << std::endl;
         return 1;
     }
 
@@ -240,15 +240,15 @@ int generate(bool force) {
         once("main.cpp", "sources/main.cpp", values, force);
     if (config.wants("shared"))
         once("symbole.cpp", "sources/symbole.cpp", values, force);
-    //l'etage objet refuse de vivre sans source, et un depot en en-tetes
-    //seuls n'en a aucune : ce fichier vide le nourrit
+    //the object stage refuses to live without a source, and a header-only
+    //repository has none: this empty file feeds it
     if (force || !std::filesystem::exists("sources/no_source.cpp"))
         assets::write("sources/no_source.cpp", "");
 
     for (const std::string &name : config.example.names) {
         const std::filesystem::path folder = std::filesystem::path("examples") / name;
-        //la classe porte le nom du bac a sable, pas celui du projet : deux
-        //dossiers cohabitent sans se marcher dessus
+        //the class is named after the sandbox rather than the project: two
+        //folders live side by side without treading on each other
         std::map<std::string, std::string> own = values;
 
         own["appclass"] = assets::capitalize(name) + "App";
@@ -272,12 +272,12 @@ int generate(bool force) {
         for (const char *flow : {"tests.yml", "docs.yml"})
             once(std::string("ci/") + flow, std::filesystem::path(".github/workflows") / flow, {}, force);
 
-    //un module par dependance, toujours reecrit : il derive de config.yaml
+    //one module per dependency, derived from config.yaml
     std::vector<Repository> all = config.repositories;
 
     all.insert(all.end(), config.example.repositories.begin(), config.example.repositories.end());
-    //once() et non render() : un Find bricole a la main reste en place quand
-    //on ajoute une dependance plus tard
+    //once() rather than render(): a Find reworked by hand stays in place
+    //when a dependency is added later
     for (const Repository &repository : all)
         once("cmake/Find.cmake",
              std::filesystem::path("cmake") / ("Find" + assets::capitalize(repository.name) + ".cmake"),
@@ -291,6 +291,6 @@ int generate(bool force) {
 int sync(const cli::Call &call) {
     if (generate(call.has("force")) != 0)
         return 1;
-    std::cout << "projet regenere depuis " << configuration.string() << std::endl;
+    std::cout << "project regenerated from " << configuration.string() << std::endl;
     return 0;
 }

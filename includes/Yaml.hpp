@@ -1,9 +1,9 @@
 /**
  * @file Yaml.hpp
- * @brief Lire et reecrire config.yaml sans en perdre la forme.
+ * @brief Reading and rewriting config.yaml without losing its shape.
  *
- * Les commandes qui modifient la configuration partagent toutes le meme
- * aller-retour : charger, toucher un noeud, reecrire avec la meme indentation.
+ * Every command that modifies the configuration shares the same round trip:
+ * load, touch one node, rewrite with the same indentation.
  */
 
 #pragma once
@@ -17,36 +17,36 @@
 
 namespace devkit {
 
-    /** @brief Charge config.yaml. Rend faux et explique s'il manque ou ment. */
+    /** @brief Loads config.yaml. Returns false and explains if it is missing or lying. */
     inline bool open(YAML::Node &root) {
         if (!std::filesystem::exists(configuration)) {
-            std::cerr << "aucun " << configuration.string() << " ici, lance devkit init" << std::endl;
+            std::cerr << "no " << configuration.string() << " here, run devkit init" << std::endl;
             return false;
         }
         try {
             root = YAML::LoadFile(configuration.string());
         } catch (const YAML::Exception &error) {
-            std::cerr << configuration.string() << " illisible : " << error.what() << std::endl;
+            std::cerr << configuration.string() << " unreadable: " << error.what() << std::endl;
             return false;
         }
         return true;
     }
 
-    /** @brief Reecrit config.yaml, puis regenere le projet. */
+    /** @brief Rewrites config.yaml, then regenerates the project. */
     inline int save(const YAML::Node &root) {
         YAML::Emitter out;
 
         out.SetIndent(4);
         out << root;
         if (!assets::write(configuration, std::string(out.c_str()) + "\n")) {
-            std::cerr << "ecriture impossible : " << configuration.string() << std::endl;
+            std::cerr << "cannot write: " << configuration.string() << std::endl;
             return 1;
         }
-        //la generation suit la configuration : il n'y a rien a lancer apres
+        //generation follows the configuration: there is nothing left to run
         return generate(false);
     }
 
-    /** @brief La liste ou vit une dependance : celle du produit, ou celle des bacs a sable. */
+    /** @brief Where a dependency lives: the product's list, or the sandboxes'. */
     inline YAML::Node dependencies(YAML::Node &root, bool sandbox) {
         return sandbox ? root["example"]["repositories"] : root["repositories"];
     }

@@ -1,10 +1,10 @@
 /**
  * @file Github.hpp
- * @brief Les depots de l'organisation, et leur derniere etiquette.
+ * @brief The organisation's repositories, and their latest tag.
  *
- * Une seule requete GraphQL, donc un jeton obligatoire : GitHub refuse
- * GraphQL sans authentification, et l'API REST anonyme est limitee a 60
- * requetes par heure, soit moins d'un inventaire complet.
+ * A single GraphQL request, hence a mandatory token: GitHub refuses GraphQL
+ * without authentication, and the anonymous REST API is capped at 60
+ * requests an hour, less than one full inventory.
  */
 
 #pragma once
@@ -24,7 +24,7 @@ namespace github {
         std::string tag = "-";
     };
 
-    /** @brief Le jeton, s'il est dans l'environnement. */
+    /** @brief The token, if the environment carries one. */
     inline std::string token() {
         for (const char *variable : {"GITHUB_TOKEN", "GH_TOKEN"})
             if (const char *value = std::getenv(variable))
@@ -32,7 +32,7 @@ namespace github {
         return "";
     }
 
-    /** @brief La valeur de la prochaine clef "name", et ou elle s'arrete. */
+    /** @brief The value of the next "name" key, and where it stops. */
     inline bool nextName(const std::string &json, std::size_t &at, std::string &value) {
         const std::string mark = "\"name\":\"";
         const std::size_t from = json.find(mark, at);
@@ -51,8 +51,8 @@ namespace github {
     }
 
     /*
-     * Delimiteur gql : dans une chaine brute R"( ... )", la suite )" ferme
-     * la chaine. La parenthese de refs( aurait ete mangee.
+     * gql delimiter: inside a raw string R"( ... )", the sequence )" closes
+     * the string. The parenthesis of refs( would have been eaten.
      */
     inline const std::string query =
         R"gql({"query":"query { organization(login: \")gql" + organisation +
@@ -61,7 +61,7 @@ namespace github {
         R"gql(orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) { nodes { name } } } } } }"})gql";
 
     /**
-     * @brief Les depots publics, tries. Rend faux et explique sur stderr.
+     * @brief The public repositories, sorted. Returns false and explains on stderr.
      */
     bool repositories(std::vector<Entry> &found);
 }

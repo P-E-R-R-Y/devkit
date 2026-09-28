@@ -1,9 +1,9 @@
 /**
  * @file init.cpp
- * @brief devkit init : pose config.yaml, puis genere le projet.
+ * @brief devkit init: lays down config.yaml, then generates the project.
  *
- * Le nom vient du dossier courant : un depot s'appelle comme son repertoire,
- * et le repeter en argument ouvrait la porte au desaccord entre les deux.
+ * The name comes from the current directory: a repository is called after its
+ * folder, and repeating it as an argument invited the two to disagree.
  */
 
 #include "Assets.hpp"
@@ -18,7 +18,7 @@ int init(const cli::Call &call) {
     const std::string name = std::filesystem::current_path().filename().string();
 
     if (std::filesystem::exists(configuration) && !call.has("force")) {
-        std::cerr << configuration.string() << " existe deja, --force pour l'ecraser" << std::endl;
+        std::cerr << configuration.string() << " already exists, --force to overwrite it" << std::endl;
         return 1;
     }
 
@@ -31,7 +31,7 @@ int init(const cli::Call &call) {
             << YAML::Key << "name"          << YAML::Value << name
             << YAML::Key << "version"       << YAML::Value << call.value("version")
             << YAML::Key << "cmake"         << YAML::Value << call.value("cmake")
-            //static, shared, app : cumulables. Le main est la seule difference.
+            //static, shared, app: cumulative. The main is the only difference.
             << YAML::Key << "kind" << YAML::Value << YAML::Flow << YAML::BeginSeq;
     for (const std::string &kind : call.values("kind"))
         out << kind;
@@ -39,15 +39,15 @@ int init(const cli::Call &call) {
             << YAML::Key << "documentation" << YAML::Value << !call.has("no-docs")
             << YAML::Key << "cicd"          << YAML::Value << !call.has("no-cicd")
             << YAML::EndMap
-        //liste vide explicite : une clef sans valeur vaudrait null
+        //an explicit empty list: a key without a value would read as null
         << YAML::Key << "repositories" << YAML::Value << YAML::Flow << YAML::BeginSeq << YAML::EndSeq;
 
-    /* --example n'a pas d'option : il epingle lui-meme de quoi ouvrir une
-     * fenetre. icore donne la boucle, raylib_impl le rendu - et amene
-     * igraphic, iaudio et system avec lui, en PUBLIC.
+    /* --example takes no option: it pins what it needs to open a window on
+     * its own. icore gives the loop, raylib_impl the rendering - and brings
+     * igraphic, iaudio and system along, PUBLIC.
      *
-     * Les dependances sont posees une fois pour tous les bacs a sable ;
-     * names dit quels dossiers existent, et devkit set example en ajoute. */
+     * The dependencies are laid down once for every sandbox; names says which
+     * folders exist, and devkit examples add appends to it. */
     if (call.has("example")) {
         out << YAML::Key << "example" << YAML::Value << YAML::BeginMap
             << YAML::Key << "repositories" << YAML::Value << YAML::BeginSeq;
@@ -68,12 +68,12 @@ int init(const cli::Call &call) {
     out << YAML::EndMap;
 
     if (!assets::write(configuration, std::string(out.c_str()) + "\n")) {
-        std::cerr << "ecriture impossible : " << configuration.string() << std::endl;
+        std::cerr << "cannot write: " << configuration.string() << std::endl;
         return 1;
     }
-    //la generation suit : init rend un projet pret, pas un fichier a suivre
+    //generation follows: init yields a ready project, not a file to act on
     if (generate(call.has("force")) != 0)
         return 1;
-    std::cout << name << " " << call.value("version") << " initialise" << std::endl;
+    std::cout << name << " " << call.value("version") << " initialised" << std::endl;
     return 0;
 }

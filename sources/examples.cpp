@@ -1,9 +1,9 @@
 /**
  * @file examples.cpp
- * @brief devkit examples : les bacs a sable, un dossier chacun.
+ * @brief devkit examples: the sandboxes, one folder each.
  *
- * examples/<nom>/ donne la cible <projet>_<nom>. Le premier bac a sable pose
- * aussi le pool de dependances que tous partagent.
+ * examples/<name>/ gives the target <project>_<name>. The first sandbox also
+ * lays down the dependency pool that all of them share.
  */
 
 #include "Config.hpp"
@@ -13,7 +13,7 @@
 
 namespace {
 
-    /** @brief icore donne la boucle, raylib_impl le rendu. */
+    /** @brief icore gives the loop, raylib_impl the rendering. */
     void pool(YAML::Node example) {
         if (example["repositories"])
             return;
@@ -43,7 +43,7 @@ int examplesLs(const cli::Call &) {
     const devkit::Config config = devkit::Config::load(configuration.string());
 
     if (config.example.names.empty())
-        std::cout << "aucun bac a sable, ajoute-en un : devkit examples add basic" << std::endl;
+        std::cout << "no sandbox yet, add one: devkit examples add basic" << std::endl;
     for (const std::string &name : config.example.names)
         std::cout << name
                   << std::string(std::max<int>(1, 24 - static_cast<int>(name.size())), ' ')
@@ -63,7 +63,7 @@ int examplesAdd(const cli::Call &call) {
 
     for (const YAML::Node &one : names)
         if (one.as<std::string>("") == name) {
-            std::cerr << name << " existe deja" << std::endl;
+            std::cerr << name << " already exists" << std::endl;
             return 1;
         }
 
@@ -75,7 +75,7 @@ int examplesAdd(const cli::Call &call) {
 
     if (devkit::save(root) != 0)
         return 1;
-    std::cout << "examples/" << name << " ajoute" << std::endl;
+    std::cout << "examples/" << name << " added" << std::endl;
     return 0;
 }
 
@@ -98,7 +98,7 @@ int examplesRm(const cli::Call &call) {
         kept.push_back(one.as<std::string>(""));
     }
     if (!found) {
-        std::cerr << name << " n'est pas un bac a sable de ce projet" << std::endl;
+        std::cerr << name << " is not a sandbox of this project" << std::endl;
         return 1;
     }
     kept.SetStyle(YAML::EmitterStyle::Flow);
@@ -107,8 +107,8 @@ int examplesRm(const cli::Call &call) {
 
     if (devkit::save(root) != 0)
         return 1;
-    //le dossier reste : il contient du code ecrit a la main
-    std::cout << name << " retire de la configuration (examples/" << name
-              << " reste, a toi de l'effacer)" << std::endl;
+    //the folder stays: it holds code written by hand
+    std::cout << name << " dropped from the configuration (examples/" << name
+              << " stays, yours to remove)" << std::endl;
     return 0;
 }

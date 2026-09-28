@@ -1,15 +1,13 @@
 /**
  * @file symbole.cpp
- * @brief Les symboles que le chargeur voit de {{name}}.
+ * @brief The symbols the loader sees of {{name}}.
  *
- * Ce fichier n'appartient qu'a la bibliotheque partagee : il est la seule
- * surface que dlsym atteint. Un nom de symbole brut est ce qu'il cherche,
- * il ne connait ni les namespaces ni le mangling C++, d'ou le extern "C"
- * et la portee globale.
+ * This file belongs to the shared library alone: it is the only surface
+ * dlsym reaches. A raw symbol name is what it looks for, it knows neither
+ * namespaces nor C++ mangling, hence the extern "C" and the global scope.
  *
- * Tout le reste de {{name}} vit dans includes/, compile une seule fois par
- * l'etage objet, et se retrouve aussi bien dans la statique que dans la
- * partagee.
+ * Everything else of {{name}} lives in includes/, compiled once by the
+ * object stage, and ends up in the static as well as in the shared one.
  *
  * @addtogroup {{name}}
  * @{
@@ -17,7 +15,7 @@
 
 extern "C" {
 
-    //TODO : ce que le chargeur doit trouver ici
+    //TODO: what the loader must find here
 
 }
 

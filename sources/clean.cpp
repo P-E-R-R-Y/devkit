@@ -1,9 +1,9 @@
 /**
  * @file clean.cpp
- * @brief devkit clean : vide build/ sans enlever le dossier.
+ * @brief devkit clean: empties build/ without removing the folder.
  *
- * Le dossier survit parce qu'il est suivi par le .gitignore et que des
- * outils l'ouvrent avant qu'on y reconstruise quoi que ce soit.
+ * The folder survives because tools open it before anything is rebuilt
+ * inside.
  */
 
 #include "cmd.hpp"
@@ -14,7 +14,7 @@ int clean(const cli::Call &) {
     const std::filesystem::path folder = "build";
 
     if (!std::filesystem::exists(folder)) {
-        std::cout << "rien a nettoyer" << std::endl;
+        std::cout << "nothing to clean" << std::endl;
         return 0;
     }
 
@@ -24,9 +24,9 @@ int clean(const cli::Call &) {
         for (const std::filesystem::directory_entry &entry : std::filesystem::directory_iterator(folder))
             erased += std::filesystem::remove_all(entry.path());
     } catch (const std::filesystem::filesystem_error &error) {
-        std::cerr << "nettoyage impossible : " << error.what() << std::endl;
+        std::cerr << "cannot clean: " << error.what() << std::endl;
         return 1;
     }
-    std::cout << erased << " entree(s) effacee(s), " << folder.string() << " conserve" << std::endl;
+    std::cout << erased << " entry(ies) erased, " << folder.string() << " kept" << std::endl;
     return 0;
 }

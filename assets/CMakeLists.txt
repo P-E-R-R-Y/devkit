@@ -20,18 +20,18 @@ set(SOURCE_FILES
 )
 
 #----------- targets -----------
-# Les sources sont compilees une seule fois, dans une bibliotheque OBJECT,
-# et les sorties se servent des memes .o.
+# The sources are compiled once, in an OBJECT library, and every output
+# helps itself to the same .o.
 #
-# Seul ce que kind demande est ecrit. Pour ajouter une sortie, ajoutez-la a
-# kind dans config.yaml et relancez devkit build.
+# Only what kind asks for is written. To add an output, add it to kind in
+# config.yaml: devkit regenerates on the spot.
 
 # --- devkit:targets ---
 # --- devkit:end ---
 
-# l'etage objet compile les sources : il lui faut les memes includes et les
-# memes options que les sorties. $<TARGET_OBJECTS:> ne transporte que les .o,
-# donc les sorties les recoivent aussi, pour ceux qui les consommeront.
+# the object stage compiles the sources: it needs the same includes and the
+# same options as the outputs. $<TARGET_OBJECTS:> carries nothing but the .o,
+# so the outputs receive them too, for whoever consumes them.
 foreach(target IN LISTS DEVKIT_OBJECTS DEVKIT_TARGETS)
   target_include_directories(${target} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/includes
@@ -47,8 +47,8 @@ endforeach()
 # --- devkit:end ---
 
 #----------- example -----------
-# Le bac a sable : son propre main, dans example/, pour ne pas croiser
-# celui du produit.
+# The sandboxes: one folder each under examples/, with their own main, so
+# that none of them crosses the product's.
 
 # --- devkit:example ---
 # --- devkit:end ---

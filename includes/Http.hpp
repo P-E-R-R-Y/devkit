@@ -1,10 +1,10 @@
 /**
  * @file Http.hpp
- * @brief Une requete HTTPS, par libcurl.
+ * @brief One HTTPS request, through libcurl.
  *
- * Liee, pas appelee : devkit ne depend d'aucun binaire installe chez
- * l'utilisateur. Le C++ n'a pas de client HTTP dans sa bibliotheque
- * standard, et TLS impose de toute facon une dependance.
+ * Linked, never invoked as a command: devkit depends on no binary installed
+ * on the user's machine. C++ carries no HTTP client in its standard library,
+ * and TLS imposes a dependency either way.
  */
 
 #pragma once
@@ -16,7 +16,7 @@
 namespace http {
 
     struct Answer {
-        long status = 0;        ///< 0 : la requete n'est meme pas partie
+        long status = 0;        ///< 0: the request never even left
         std::string body;
 
         bool ok() const { return status >= 200 && status < 300; }
@@ -31,10 +31,10 @@ namespace http {
     }
 
     /**
-     * @brief GET, ou POST si `payload` n'est pas vide.
+     * @brief GET, or POST when `payload` is not empty.
      *
-     * @param token jeton GitHub, facultatif : il leve la limite de 60
-     *              requetes par heure et ouvre l'acces a GraphQL
+     * @param token GitHub token, optional: it lifts the 60 requests an hour
+     *              cap and opens the way to GraphQL
      */
     inline Answer request(const std::string &url, const std::string &token = "",
                           const std::string &payload = "") {
@@ -52,7 +52,7 @@ namespace http {
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        //github refuse les requetes sans agent
+        //github refuses requests without an agent
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "devkit");
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);

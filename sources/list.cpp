@@ -1,6 +1,6 @@
 /**
  * @file list.cpp
- * @brief devkit list : les depots publics de P-E-R-R-Y, et leur derniere version.
+ * @brief devkit list: the public P-E-R-R-Y repositories, and their latest version.
  */
 
 #include "Github.hpp"
@@ -15,21 +15,21 @@ namespace github {
         const std::string key = token();
 
         if (key.empty()) {
-            std::cerr << "il faut un jeton : export GITHUB_TOKEN=<...>\n"
-                      << "GitHub refuse GraphQL sans authentification." << std::endl;
+            std::cerr << "a token is needed: export GITHUB_TOKEN=<...>\n"
+                      << "GitHub refuses GraphQL without authentication." << std::endl;
             return false;
         }
 
         const http::Answer answer = http::request("https://api.github.com/graphql", key, query);
 
         if (!answer.ok()) {
-            std::cerr << "github a repondu " << answer.status
-                      << (answer.status == 401 ? " : jeton refuse" : "") << std::endl;
+            std::cerr << "github answered " << answer.status
+                      << (answer.status == 401 ? ": token refused" : "") << std::endl;
             return false;
         }
-        //un 200 peut porter une erreur GraphQL : la lire plutot que rendre une liste vide
+        //a 200 may carry a GraphQL error: read it rather than return an empty list
         if (answer.body.find("\"errors\"") != std::string::npos) {
-            std::cerr << "github a refuse la requete : " << answer.body.substr(0, 200) << std::endl;
+            std::cerr << "github refused the request: " << answer.body.substr(0, 200) << std::endl;
             return false;
         }
 
@@ -43,7 +43,7 @@ namespace github {
 
             if (start != std::string::npos) {
                 at = start + refs.size();
-                //"[]" ferme aussitot : ce depot n'a aucune etiquette
+                //"[]" closes at once: that repository carries no tag
                 if (answer.body[at] != ']')
                     nextName(answer.body, at, entry.tag);
             }
@@ -51,7 +51,7 @@ namespace github {
         }
 
         if (found.empty()) {
-            std::cerr << "aucun depot dans la reponse" << std::endl;
+            std::cerr << "no repository in the answer" << std::endl;
             return false;
         }
         std::sort(found.begin(), found.end(),
@@ -74,6 +74,6 @@ int list(const cli::Call &call) {
         std::cout << shown << std::string(std::max<int>(1, 40 - static_cast<int>(shown.size())), ' ')
                   << entry.tag << std::endl;
     }
-    std::cout << "\n" << found.size() << " depots publics" << std::endl;
+    std::cout << "\n" << found.size() << " public repositories" << std::endl;
     return 0;
 }

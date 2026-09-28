@@ -1,6 +1,6 @@
 /**
  * @file Assets.hpp
- * @brief Les gabarits de devkit/assets, recopies en remplacant les {{clefs}}.
+ * @brief The templates of devkit/assets, copied with the {{keys}} replaced.
  */
 
 #pragma once
@@ -17,12 +17,12 @@
 namespace assets {
 
     /**
-     * @brief Le dossier des gabarits, cherche dans cet ordre :
+     * @brief The templates folder, looked up in this order:
      *
-     *  1. $DEVKIT_ASSETS, pour essayer un jeu de gabarits sans rien installer ;
-     *  2. le dossier du depot, fixe a la compilation — il gagne tant qu'il
-     *     existe, pour qu'une modification de gabarit prenne effet aussitot ;
-     *  3. la copie installee, seule restante si le depot a disparu.
+     *  1. $DEVKIT_ASSETS, to try a set of templates without installing a thing;
+     *  2. the repository folder, fixed at compile time - it wins as long as it
+     *     exists, so that editing a template takes effect at once;
+     *  3. the installed copy, all that is left once the repository is gone.
      */
     inline std::filesystem::path root() {
         if (const char *forced = std::getenv("DEVKIT_ASSETS"))
@@ -34,7 +34,7 @@ namespace assets {
         return DEVKIT_ASSETS;
     }
 
-    /** @brief Le contenu d'un fichier, "" s'il est illisible. */
+    /** @brief A file's contents, "" when it cannot be read. */
     inline std::string read(const std::filesystem::path &file) {
         std::ifstream in(file);
         std::ostringstream all;
@@ -43,7 +43,7 @@ namespace assets {
         return all.str();
     }
 
-    /** @brief Remplace chaque {{clef}} par sa valeur. */
+    /** @brief Replaces every {{key}} with its value. */
     inline std::string fill(std::string text, const std::map<std::string, std::string> &values) {
         for (const auto &[key, value] : values) {
             const std::string mark = "{{" + key + "}}";
@@ -54,7 +54,7 @@ namespace assets {
         return text;
     }
 
-    /** @brief Ecrit un texte, en creant les dossiers manquants. */
+    /** @brief Writes a text, creating the missing folders. */
     inline bool write(const std::filesystem::path &target, const std::string &text) {
         if (target.has_parent_path())
             std::filesystem::create_directories(target.parent_path());
@@ -66,27 +66,28 @@ namespace assets {
     }
 
     /**
-     * @brief Copie un gabarit d'assets vers target, {{clefs}} remplacees.
+     * @brief Copies a template from assets to target, {{keys}} replaced.
      *
-     * Un gabarit absent est une erreur, pas un fichier vide : c'est la
-     * difference entre "rien a generer" et "je n'ai pas trouve le modele".
+     * A missing template is an error rather than an empty file: that is the
+     * difference between "nothing to generate" and "I could not find the
+     * model".
      */
     inline bool render(const std::string &name, const std::filesystem::path &target,
                        const std::map<std::string, std::string> &values = {}) {
         const std::filesystem::path source = root() / name;
 
         if (!std::filesystem::exists(source)) {
-            std::fprintf(stderr, "gabarit introuvable : %s\n", source.c_str());
+            std::fprintf(stderr, "template not found: %s\n", source.c_str());
             return false;
         }
         return write(target, fill(read(source), values));
     }
 
     /**
-     * @brief Remplace le contenu entre "# --- devkit:<marker> ---" et
+     * @brief Replaces the contents between "# --- devkit:<marker> ---" and
      *        "# --- devkit:end ---".
      *
-     * Les marqueurs restent, pour qu'une seconde passe retrouve son bloc.
+     * The markers stay, so that a second pass finds its block again.
      */
     inline bool replaceBlock(const std::filesystem::path &file, const std::string &marker,
                              const std::string &content) {
@@ -106,7 +107,7 @@ namespace assets {
         return write(file, text);
     }
 
-    /** @brief Les mots, separes par une espace. */
+    /** @brief The words, separated by one space. */
     inline std::string join(const std::vector<std::string> &words) {
         std::string out;
 
@@ -115,7 +116,7 @@ namespace assets {
         return out;
     }
 
-    /** @brief "system" -> "System", pour Find<Nom>.cmake et find_package(<Nom>). */
+    /** @brief "system" -> "System", for Find<Name>.cmake and find_package(<Name>). */
     inline std::string capitalize(std::string name) {
         if (!name.empty())
             name[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));

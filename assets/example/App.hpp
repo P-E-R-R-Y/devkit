@@ -1,8 +1,8 @@
 /**
  * @file {{appclass}}.hpp
- * @brief Le bac a sable {{example}} : de quoi voir tourner {{name}}.
+ * @brief The {{example}} sandbox: enough to watch {{name}} run.
  *
- * Ecrit une seule fois par devkit, puis il est a toi. Taille dedans.
+ * Written once by devkit, then it is yours. Carve into it.
  */
 
 #pragma once
@@ -33,19 +33,19 @@ class {{appclass}} : public IApp {
         void update() override {
             if (!_window->isOpen())
                 stop();
-            //TODO : fais avancer {{name}}
+            //TODO: step {{name}} forward
         }
 
         void display() override {
             _window->beginDraw();
-            //TODO : dessine
+            //TODO: draw
             _window->endDraw();
         }
 
     private:
-        /* Le vendor est lie en statique : on prend la CLASSE, pas le protocole
-         * de module. acquire() et release() supposent un IModuleManager qui
-         * n'existe pas ici - ne les appelle pas. */
+        /* The vendor is linked statically: we take the CLASS, not the module
+         * protocol. acquire() and release() assume an IModuleManager that does
+         * not exist here - do not call them. */
         std::unique_ptr<IGraphic2Module> _graphic = std::make_unique<RayGraphicModule>();
         graphic::IWindow2 *_window = nullptr;
 };

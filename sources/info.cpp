@@ -1,6 +1,6 @@
 /**
  * @file info.cpp
- * @brief devkit info : ce projet en un coup d'oeil.
+ * @brief devkit info: this project at a glance.
  */
 
 #include "Config.hpp"
@@ -10,7 +10,7 @@
 
 int info(const cli::Call &) {
     if (!std::filesystem::exists(configuration)) {
-        std::cerr << "aucun " << configuration.string() << " ici, lance devkit init" << std::endl;
+        std::cerr << "no " << configuration.string() << " here, run devkit init" << std::endl;
         return 1;
     }
 
@@ -21,13 +21,13 @@ int info(const cli::Call &) {
         for (const std::string &kind : config.kind)
             std::cout << kind << " ";
         std::cout << " cmake " << config.cmake
-                  << ", tests " << (config.tests ? "oui" : "non")
-                  << ", docs " << (config.documentation ? "oui" : "non")
-                  << ", ci " << (config.cicd ? "oui" : "non") << "\n"
-                  << "  " << config.repositories.size() << " dependance(s), "
-                  << config.example.names.size() << " bac(s) a sable" << std::endl;
+                  << ", tests " << (config.tests ? "yes" : "no")
+                  << ", docs " << (config.documentation ? "yes" : "no")
+                  << ", ci " << (config.cicd ? "yes" : "no") << "\n"
+                  << "  " << config.repositories.size() << " dependency(ies), "
+                  << config.example.names.size() << " sandbox(es)" << std::endl;
     } catch (const YAML::Exception &error) {
-        std::cerr << configuration.string() << " illisible : " << error.what() << std::endl;
+        std::cerr << configuration.string() << " unreadable: " << error.what() << std::endl;
         return 1;
     }
     return 0;
